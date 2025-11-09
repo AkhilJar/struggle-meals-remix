@@ -23,7 +23,7 @@ const Dashboard = () => {
       <main className="container mx-auto px-4 py-8 space-y-10">
         {/* Hero */}
         <section className="bg-gradient-hero border-4 border-primary rounded-3xl p-8 text-center shadow-neon">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-struggle text-primary-foreground">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-struggle text-primary-foreground">
             <Users className="h-8 w-8" />
           </div>
           <p className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">

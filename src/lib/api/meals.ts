@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { Meal, Remix, NewRemixInput } from "@/types/meal";
+import { Meal, Remix, NewRemixInput, NewMealInput } from "@/types/meal";
 
 type MealRow = {
   id: string;
@@ -141,6 +141,18 @@ export const fetchMealById = async (id: string): Promise<Meal | null> => {
   return data ? mapMeal(data) : null;
 };
 
+export const fetchRecentMeals = async (limit = 6): Promise<Meal[]> => {
+  const { data, error } = await supabase
+    .from<MealRow>("meals")
+    .select(mealSelect)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    throw error;
+  }
+  return (data ?? []).map(mapMeal);
+};
+
 export const fetchRemixesForMeal = async (mealId: string): Promise<Remix[]> => {
   const { data, error } = await supabase
     .from<RemixRow>("remixes")
@@ -202,6 +214,67 @@ export const createRemix = async (payload: NewRemixInput): Promise<Remix> => {
   return mapRemix(data);
 };
 
+export const createMeal = async (payload: NewMealInput): Promise<Meal> => {
+  const { data, error } = await supabase
+    .from<MealRow>("meals")
+    .insert({
+      title: payload.title,
+      description: payload.description,
+      image_url: payload.image,
+      ingredients: payload.ingredients,
+      tools: payload.tools,
+      steps: payload.steps,
+      time_in_minutes: payload.timeInMinutes,
+      estimated_cost: payload.estimatedCost,
+      struggle_score: payload.struggleScore,
+      author_name: payload.authorName,
+      author_handle: payload.authorHandle,
+      author_avatar: payload.authorAvatar,
+      verifications: payload.verifications ?? 0,
+      remixes: payload.remixes ?? 0,
+      is_verified: payload.isVerified ?? false,
+    })
+    .select(mealSelect)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return mapMeal(data);
+};
+
+export const updateMeal = async (id: string, payload: NewMealInput): Promise<Meal> => {
+  const { data, error } = await supabase
+    .from<MealRow>("meals")
+    .update({
+      title: payload.title,
+      description: payload.description,
+      image_url: payload.image,
+      ingredients: payload.ingredients,
+      tools: payload.tools,
+      steps: payload.steps,
+      time_in_minutes: payload.timeInMinutes,
+      estimated_cost: payload.estimatedCost,
+      struggle_score: payload.struggleScore,
+      author_name: payload.authorName,
+      author_handle: payload.authorHandle,
+      author_avatar: payload.authorAvatar,
+      verifications: payload.verifications,
+      remixes: payload.remixes,
+      is_verified: payload.isVerified,
+    })
+    .eq("id", id)
+    .select(mealSelect)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return mapMeal(data);
+};
+
 export const updateRemix = async (id: string, payload: NewRemixInput): Promise<Remix> => {
   const { data, error } = await supabase
     .from<RemixRow>("remixes")
@@ -229,6 +302,16 @@ export const updateRemix = async (id: string, payload: NewRemixInput): Promise<R
   }
 
   return mapRemix(data);
+};
+
+export const deleteMeal = async (id: string): Promise<void> => {
+  const { error } = await supabase.from<MealRow>("meals").delete().eq("id", id);
+  if (error) throw error;
+};
+
+export const deleteRemix = async (id: string): Promise<void> => {
+  const { error } = await supabase.from<RemixRow>("remixes").delete().eq("id", id);
+  if (error) throw error;
 };
 
 export const verifyMeal = async (

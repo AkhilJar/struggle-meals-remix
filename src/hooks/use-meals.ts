@@ -1,15 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchMeals,
+  fetchRecentMeals,
   fetchMealById,
   fetchRemixById,
   fetchRemixesForMeal,
   fetchLatestRemixes,
   createRemix,
+  createMeal,
+  updateMeal,
   updateRemix,
+  deleteMeal,
+  deleteRemix,
   verifyMeal,
 } from "@/lib/api/meals";
-import type { Meal, NewRemixInput } from "@/types/meal";
+import type { Meal, NewMealInput, NewRemixInput } from "@/types/meal";
 
 export const useMeals = () =>
   useQuery({
@@ -44,6 +49,12 @@ export const useLatestRemixes = (limit = 6) =>
     queryFn: () => fetchLatestRemixes(limit),
   });
 
+export const useRecentMeals = (limit = 6) =>
+  useQuery({
+    queryKey: ["recent-meals", limit],
+    queryFn: () => fetchRecentMeals(limit),
+  });
+
 export const useCreateRemix = () => {
   const queryClient = useQueryClient();
 
@@ -52,10 +63,45 @@ export const useCreateRemix = () => {
     onSuccess: (remix) => {
       queryClient.invalidateQueries({ queryKey: ["remixes", remix.parentMealId ?? undefined] });
       queryClient.invalidateQueries({ queryKey: ["meals"] });
-      queryClient.invalidateQueries({ queryKey: ["latest-remixes"] });
+      queryClient.invalidateQueries({ queryKey: ["latest-remixes"], exact: false });
       if (remix.parentMealId) {
         queryClient.invalidateQueries({ queryKey: ["meal", remix.parentMealId] });
       }
+    },
+  });
+};
+
+export const useCreateMeal = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: NewMealInput) => createMeal(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recent-meals"] });
+    },
+  });
+};
+
+export const useUpdateMeal = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: NewMealInput }) => updateMeal(id, payload),
+    onSuccess: (meal) => {
+      queryClient.invalidateQueries({ queryKey: ["meal", meal.id] });
+      queryClient.invalidateQueries({ queryKey: ["recent-meals"] });
+    },
+  });
+};
+
+export const useDeleteMeal = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteMeal(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ["recent-meals"] });
+      queryClient.removeQueries({ queryKey: ["meal", id], exact: true });
     },
   });
 };
@@ -68,10 +114,23 @@ export const useUpdateRemix = () => {
     onSuccess: (remix) => {
       queryClient.invalidateQueries({ queryKey: ["remix", remix.id] });
       queryClient.invalidateQueries({ queryKey: ["remixes", remix.parentMealId ?? undefined] });
-      queryClient.invalidateQueries({ queryKey: ["latest-remixes"] });
+      queryClient.invalidateQueries({ queryKey: ["latest-remixes"], exact: false });
       if (remix.parentMealId) {
         queryClient.invalidateQueries({ queryKey: ["meal", remix.parentMealId] });
       }
+    },
+  });
+};
+
+export const useDeleteRemix = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => deleteRemix(id),
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ["remix", id] });
+      queryClient.invalidateQueries({ queryKey: ["remixes"] });
+      queryClient.invalidateQueries({ queryKey: ["latest-remixes"], exact: false });
     },
   });
 };

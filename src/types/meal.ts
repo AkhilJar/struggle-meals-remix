@@ -55,3 +55,21 @@ export interface NewRemixInput {
   authorHandle: string;
   authorAvatar?: string | null;
 }
+
+export interface NewMealInput {
+  title: string;
+  description?: string | null;
+  image?: string | null;
+  ingredients: string[];
+  tools: string[];
+  steps: string[];
+  timeInMinutes: number;
+  estimatedCost: number;
+  struggleScore: number;
+  authorName: string;
+  authorHandle: string;
+  authorAvatar?: string | null;
+  verifications?: number;
+  remixes?: number;
+  isVerified?: boolean;
+}

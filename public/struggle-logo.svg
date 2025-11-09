@@ -1,0 +1,33 @@
+<svg width="200" height="240" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hatGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff7a00"/>
+      <stop offset="100%" stop-color="#ff5200"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" fill-rule="evenodd">
+    <path
+      d="M38 120c-8-14-12-30-12-48C26 32 58 0 100 0s74 32 74 72c0 18-4 34-12 48v72c0 16-12 28-28 28H66c-16 0-28-12-28-28v-72z"
+      fill="url(#hatGradient)"
+      stroke="#1f1f1f"
+      stroke-width="10"
+      stroke-linejoin="round"
+    />
+    <path
+      d="M58 92c10-8 24-12 42-12M142 92c-10-8-24-12-42-12"
+      stroke="#1f1f1f"
+      stroke-width="8"
+      stroke-linecap="round"
+    />
+    <path
+      d="M90 156c2 6 8 10 16 10s14-4 16-10"
+      stroke="#1f1f1f"
+      stroke-width="10"
+      stroke-linecap="round"
+    />
+    <g font-family="Montserrat, sans-serif" font-weight="700" font-size="26" fill="#1f1f1f" text-anchor="middle">
+      <text x="100" y="208">STRUGGLE</text>
+      <text x="100" y="234">MEALS</text>
+    </g>
+  </g>
+</svg>

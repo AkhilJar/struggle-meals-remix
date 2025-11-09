@@ -7,11 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { MealCard } from "@/components/MealCard";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Shuffle, Plus, Trash2, Upload, ChevronLeft, Loader2, Sparkles, Pencil, Flame } from "lucide-react";
+import { Shuffle, Plus, Trash2, Upload, ChevronLeft, Loader2, Sparkles, Pencil, Flame, Trash } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useCreateRemix, useMeal, useMeals, useLatestRemixes, useRemix, useUpdateRemix } from "@/hooks/use-meals";
+import {
+  useCreateMeal,
+  useCreateRemix,
+  useDeleteMeal,
+  useDeleteRemix,
+  useMeal,
+  useLatestRemixes,
+  useRecentMeals,
+  useRemix,
+  useUpdateMeal,
+  useUpdateRemix,
+} from "@/hooks/use-meals";
 import { toast } from "@/components/ui/use-toast";
-import type { NewRemixInput } from "@/types/meal";
+import type { NewMealInput, NewRemixInput } from "@/types/meal";
 
 const fallbackImage = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80&auto=format&fit=crop";
 
@@ -32,26 +43,44 @@ type RemixDraft = {
 const Remix = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParamsRaw] = useSearchParams();
+  const setSearchParams = (mutator: (params: URLSearchParams) => void) => {
+    const next = new URLSearchParams(searchParams);
+    mutator(next);
+    setSearchParamsRaw(next);
+  };
   const editingRemixId = searchParams.get("edit") ?? undefined;
+  const editingMealId = searchParams.get("editMeal") ?? undefined;
   const { data: remixToEdit, isLoading: remixLoading } = useRemix(editingRemixId);
   const parentMealId = editingRemixId ? remixToEdit?.parentMealId ?? undefined : id;
   const { data: originalMeal, isLoading: mealLoading } = useMeal(parentMealId);
-  const { data: meals = [], isLoading: mealsLoading, isError: mealsError, refetch: refetchMeals } = useMeals();
+  const { data: editingMealData, isLoading: editingMealLoading } = useMeal(editingMealId);
+  const {
+    data: recentMeals = [],
+    isLoading: recentMealsLoading,
+    isError: recentMealsError,
+    refetch: refetchRecentMeals,
+  } = useRecentMeals(6);
   const { data: latestRemixes = [], isLoading: latestLoading, refetch: refetchLatest } = useLatestRemixes(6);
-  const createRemix = useCreateRemix();
-  const updateRemix = useUpdateRemix();
-  const storageKey = useMemo(
-    () => `remix-draft-${editingRemixId ? `edit-${editingRemixId}` : parentMealId ?? "new"}`,
-    [editingRemixId, parentMealId],
-  );
+  const createRemixMutation = useCreateRemix();
+  const createMealMutation = useCreateMeal();
+  const updateMealMutation = useUpdateMeal();
+  const updateRemixMutation = useUpdateRemix();
+  const deleteMealMutation = useDeleteMeal();
+  const deleteRemixMutation = useDeleteRemix();
+  const storageKey = useMemo(() => {
+    if (editingRemixId) return `remix-draft-edit-${editingRemixId}`;
+    if (editingMealId) return `remix-draft-edit-meal-${editingMealId}`;
+    if (parentMealId) return `remix-draft-remix-${parentMealId}`;
+    return "remix-draft-new";
+  }, [editingRemixId, editingMealId, parentMealId]);
   const hasHydratedDraft = useRef(false);
 
   useEffect(() => {
     hasHydratedDraft.current = false;
   }, [storageKey]);
 
-  const [showForm, setShowForm] = useState(Boolean(id || editingRemixId));
+  const [showForm, setShowForm] = useState(Boolean(id || editingRemixId || editingMealId));
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [ingredients, setIngredients] = useState<string[]>([""]);
@@ -65,9 +94,13 @@ const Remix = () => {
   const [authorAvatar, setAuthorAvatar] = useState("https://api.dicebear.com/7.x/avataaars/svg?seed=Remix");
 
   const [creationLabel] = useState("Make Your Struggle");
-  const isEditing = Boolean(editingRemixId);
+  const isEditingRemix = Boolean(editingRemixId);
+  const isEditingMeal = Boolean(editingMealId);
+  const isEditing = isEditingRemix || isEditingMeal;
+  const isRemixContext = Boolean(parentMealId);
   const waitingOnBaseMeal = Boolean(parentMealId) && mealLoading;
-  const waitingOnEditData = isEditing && remixLoading && !remixToEdit;
+  const waitingOnEditData =
+    (isEditingRemix && remixLoading && !remixToEdit) || (isEditingMeal && editingMealLoading && !editingMealData);
 
   const hydrateDraft = (draft: RemixDraft) => {
     if (!draft) return;
@@ -92,7 +125,7 @@ const Remix = () => {
       hasHydratedDraft.current = true;
       return;
     }
-    if (isEditing && remixToEdit) {
+    if (isEditingRemix && remixToEdit) {
       hydrateDraft({
         title: remixToEdit.title,
         description: remixToEdit.description ?? "",
@@ -109,7 +142,24 @@ const Remix = () => {
       hasHydratedDraft.current = true;
       return;
     }
-    if (originalMeal) {
+    if (isEditingMeal && editingMealData) {
+      hydrateDraft({
+        title: editingMealData.title,
+        description: editingMealData.description ?? "",
+        ingredients: editingMealData.ingredients ?? [""],
+        tools: editingMealData.tools ?? [""],
+        steps: editingMealData.steps ?? [""],
+        timeInMinutes: editingMealData.timeInMinutes,
+        estimatedCost: editingMealData.estimatedCost,
+        imageUrl: editingMealData.image ?? "",
+        authorName: editingMealData.author.name,
+        authorHandle: editingMealData.author.handle,
+        authorAvatar: editingMealData.author.avatar ?? "https://api.dicebear.com/7.x/avataaars/svg?seed=Remix",
+      });
+      hasHydratedDraft.current = true;
+      return;
+    }
+    if (originalMeal && Boolean(parentMealId)) {
       hydrateDraft({
         title: `${originalMeal.title} (Remix)`,
         description: "",
@@ -125,7 +175,18 @@ const Remix = () => {
       });
       hasHydratedDraft.current = true;
     }
-  }, [originalMeal, remixToEdit, storageKey, authorName, authorHandle, authorAvatar, isEditing]);
+  }, [
+    originalMeal,
+    remixToEdit,
+    editingMealData,
+    storageKey,
+    authorName,
+    authorHandle,
+    authorAvatar,
+    isEditingRemix,
+    isEditingMeal,
+    parentMealId,
+  ]);
 
   useEffect(() => {
     if (!showForm || typeof window === "undefined") return;
@@ -213,40 +274,89 @@ const Remix = () => {
     }
 
     try {
-      const payload: NewRemixInput = {
-        parentMealId: parentMealId ?? null,
-        title: title.trim(),
-        description,
-        image: imageUrl || originalMeal?.image || null,
-        ingredients: sanitizedIngredients,
-        tools: sanitizedTools,
-        steps: sanitizedSteps,
-        timeInMinutes,
-        estimatedCost,
-        struggleScore: Math.min(100, Math.max(0, Math.round(timeInMinutes + sanitizedIngredients.length * 5))), // playful heuristic
-        authorName,
-        authorHandle,
-        authorAvatar,
-      };
+      const struggleScore = Math.min(100, Math.max(0, Math.round(timeInMinutes + sanitizedIngredients.length * 5)));
 
-      if (isEditing && editingRemixId) {
-        await updateRemix.mutateAsync({ id: editingRemixId, payload });
-        toast({
-          title: "Remix updated",
-          description: "Your chaos meal has fresh stats.",
+      if (isEditingRemix && editingRemixId) {
+        await updateRemixMutation.mutateAsync({
+          id: editingRemixId,
+          payload: {
+            parentMealId: parentMealId ?? null,
+            title: title.trim(),
+            description,
+            image: imageUrl || originalMeal?.image || null,
+            ingredients: sanitizedIngredients,
+            tools: sanitizedTools,
+            steps: sanitizedSteps,
+            timeInMinutes,
+            estimatedCost,
+            struggleScore,
+            authorName,
+            authorHandle,
+            authorAvatar,
+          },
         });
+        toast({ title: "Remix updated", description: "Your chaos meal has fresh stats." });
         sessionStorage.removeItem(storageKey);
-        setSearchParams({});
+        setSearchParams((params) => {
+          params.delete("edit");
+          params.delete("editMeal");
+        });
         resetForm();
         setShowForm(false);
         refetchLatest();
-      } else {
-        await createRemix.mutateAsync(payload);
+        return;
+      }
+
+      if (!isRemixContext && isEditingMeal && editingMealId && editingMealData) {
+        const mealPayload: NewMealInput = {
+          title: title.trim(),
+          description,
+          image: imageUrl || null,
+          ingredients: sanitizedIngredients,
+          tools: sanitizedTools,
+          steps: sanitizedSteps,
+          timeInMinutes,
+          estimatedCost,
+          struggleScore,
+          authorName,
+          authorHandle,
+          authorAvatar,
+          verifications: editingMealData.verifications,
+          remixes: editingMealData.remixes,
+          isVerified: editingMealData.isVerified,
+        };
+        await updateMealMutation.mutateAsync({ id: editingMealId, payload: mealPayload });
+        toast({ title: "Meal updated", description: "Latest submissions refreshed." });
+        sessionStorage.removeItem(storageKey);
+        setSearchParams((params) => {
+          params.delete("edit");
+          params.delete("editMeal");
+        });
+        resetForm();
+        setShowForm(false);
+        refetchRecentMeals();
+        return;
+      }
+
+      if (isRemixContext) {
+        await createRemixMutation.mutateAsync({
+          parentMealId: parentMealId ?? null,
+          title: title.trim(),
+          description,
+          image: imageUrl || originalMeal?.image || null,
+          ingredients: sanitizedIngredients,
+          tools: sanitizedTools,
+          steps: sanitizedSteps,
+          timeInMinutes,
+          estimatedCost,
+          struggleScore,
+          authorName,
+          authorHandle,
+          authorAvatar,
+        });
         toast({
           title: "Remix posted",
-          description: originalMeal
-            ? `Your spin on ${originalMeal.title} is live.`
-            : "New chaos meal deployed.",
+          description: originalMeal ? `Your spin on ${originalMeal.title} is live.` : "New chaos meal deployed.",
         });
         sessionStorage.removeItem(storageKey);
         if (originalMeal) {
@@ -256,17 +366,48 @@ const Remix = () => {
           setShowForm(false);
           refetchLatest();
         }
+      } else {
+        const mealPayload: NewMealInput = {
+          title: title.trim(),
+          description,
+          image: imageUrl || null,
+          ingredients: sanitizedIngredients,
+          tools: sanitizedTools,
+          steps: sanitizedSteps,
+          timeInMinutes,
+          estimatedCost,
+          struggleScore,
+          authorName,
+          authorHandle,
+          authorAvatar,
+          verifications: 0,
+          remixes: 0,
+          isVerified: false,
+        };
+        await createMealMutation.mutateAsync(mealPayload);
+        toast({
+          title: "Meal posted",
+          description: "Your struggle meal now tops the latest submissions.",
+        });
+        sessionStorage.removeItem(storageKey);
+        resetForm();
+        setShowForm(false);
+        refetchRecentMeals();
       }
     } catch (error) {
       console.error(error);
       toast({
         title: "Supabase error",
-        description: "We couldn't save that remix. Double-check your Supabase table + RLS.",
+        description: isRemixContext || isEditingRemix ? "We couldn't save that remix." : "We couldn't save that meal.",
       });
     }
   };
 
-  const loadingMessage = isEditing ? "Loading your remix from Supabase..." : "Pulling the original meal from Supabase...";
+  const loadingMessage = isEditingRemix
+    ? "Loading your remix from Supabase..."
+    : isEditingMeal
+      ? "Loading your meal from Supabase..."
+      : "Pulling the original meal from Supabase...";
 
   if (waitingOnBaseMeal || waitingOnEditData) {
     return (
@@ -280,6 +421,8 @@ const Remix = () => {
     );
   }
 
+  const showOriginalBack = Boolean(originalMeal && isRemixContext);
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -287,7 +430,7 @@ const Remix = () => {
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
-          {originalMeal && (
+          {showOriginalBack && originalMeal && (
             <Button 
               variant="ghost" 
               onClick={() => navigate(`/meal/${originalMeal.id}`)}
@@ -309,7 +452,7 @@ const Remix = () => {
                 </h1>
                 {isEditing && (
                   <Badge className="bg-primary text-primary-foreground border-0 font-black">
-                    Editing Remix
+                    {isEditingRemix ? "Editing Remix" : "Editing Meal"}
                   </Badge>
                 )}
               </div>
@@ -325,7 +468,10 @@ const Remix = () => {
               variant="outline"
               size="sm"
               onClick={() => {
-                setSearchParams({});
+                setSearchParams((params) => {
+                  params.delete("edit");
+                  params.delete("editMeal");
+                });
                 resetForm();
                 setShowForm(false);
               }}
@@ -602,10 +748,10 @@ const Remix = () => {
             <Button 
               type="submit"
               size="lg"
-              disabled={createRemix.isPending}
+              disabled={createRemixMutation.isPending || createMealMutation.isPending || updateRemixMutation.isPending}
               className="w-full bg-gradient-struggle border-0 hover:opacity-90 font-black text-xl h-16"
             >
-              {createRemix.isPending ? (
+              {createRemixMutation.isPending || createMealMutation.isPending || updateRemixMutation.isPending ? (
                 <>
                   <Loader2 className="w-6 h-6 mr-2 animate-spin" />
                   Posting...
@@ -632,25 +778,77 @@ const Remix = () => {
               </p>
             </div>
           </div>
-          {mealsLoading && (
+          {recentMealsLoading && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {[...Array(4)].map((_, idx) => (
                 <div key={idx} className="h-80 rounded-xl border-2 border-dashed border-border animate-pulse bg-card/50" />
               ))}
             </div>
           )}
-          {mealsError && (
+          {recentMealsError && (
             <Card className="p-6 border-destructive text-destructive">
               <p className="font-bold mb-4">Couldn&apos;t load the feed. Try again?</p>
-              <Button variant="outline" onClick={() => refetchMeals()}>
+              <Button variant="outline" onClick={() => refetchRecentMeals()}>
                 Retry
               </Button>
             </Card>
           )}
-          {!mealsLoading && !mealsError && (
+          {!recentMealsLoading && !recentMealsError && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {meals.slice(0, 4).map((meal, index) => (
-                <MealCard key={meal.id} meal={meal} rank={index + 1} />
+              {recentMeals.slice(0, 4).map((meal) => (
+                <div key={meal.id} className="relative">
+                  <MealCard meal={meal} />
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="font-bold"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSearchParams((params) => {
+                          params.set("editMeal", meal.id);
+                          params.delete("edit");
+                        });
+                        setShowForm(true);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                    >
+                      <Pencil className="w-3 h-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="font-bold"
+                      disabled={deleteMealMutation.isPending}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!confirm(`Delete ${meal.title}?`)) return;
+                        deleteMealMutation.mutate(meal.id, {
+                          onSuccess: () => {
+                            refetchRecentMeals();
+                            toast({ title: "Meal deleted", description: `${meal.title} left the board.` });
+                            if (editingMealId === meal.id) {
+                              setSearchParams((params) => {
+                                params.delete("editMeal");
+                                params.delete("edit");
+                              });
+                              resetForm();
+                              setShowForm(false);
+                            }
+                          },
+                          onError: () =>
+                            toast({ title: "Delete failed", description: "Supabase said nope—try again later." }),
+                        });
+                      }}
+                    >
+                      <Trash className="w-3 h-3 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
@@ -722,13 +920,44 @@ const Remix = () => {
                           if (typeof window !== "undefined") {
                             sessionStorage.removeItem(`remix-draft-edit-${remix.id}`);
                           }
-                          setSearchParams({ edit: remix.id });
+                          setSearchParams((params) => {
+                            params.set("edit", remix.id);
+                            params.delete("editMeal");
+                          });
                           setShowForm(true);
                           window.scrollTo({ top: 0, behavior: "smooth" });
                         }}
                       >
                         <Pencil className="w-3 h-3 mr-1" />
                         Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="text-xs"
+                        disabled={deleteRemixMutation.isPending}
+                        onClick={() => {
+                          if (!confirm(`Delete remix ${remix.title}?`)) return;
+                          deleteRemixMutation.mutate(remix.id, {
+                            onSuccess: () => {
+                              refetchLatest();
+                              toast({ title: "Remix deleted", description: `${remix.title} removed.` });
+                              if (editingRemixId === remix.id) {
+                                setSearchParams((params) => {
+                                  params.delete("edit");
+                                  params.delete("editMeal");
+                                });
+                                resetForm();
+                                setShowForm(false);
+                              }
+                            },
+                            onError: () =>
+                              toast({ title: "Delete failed", description: "Could not delete remix right now." }),
+                          });
+                        }}
+                      >
+                        <Trash className="w-3 h-3 mr-1" />
+                        Delete
                       </Button>
                     </div>
                   </div>
