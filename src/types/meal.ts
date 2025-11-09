@@ -16,6 +16,7 @@ export interface Meal {
   isVerified: boolean;
   createdAt: Date;
   description?: string;
+  steps: string[];
 }
 
 export const MOCK_MEALS: Meal[] = [
@@ -36,7 +37,16 @@ export const MOCK_MEALS: Meal[] = [
     remixes: 8,
     isVerified: true,
     createdAt: new Date("2024-01-15"),
-    description: "Crushed up a bag of Hot Cheetos for texture. Game changer."
+    description: "Crushed up a bag of Hot Cheetos for texture. Game changer.",
+    steps: [
+      "Microwave the rice until hot (2 min)",
+      "Crush Hot Cheetos in the bag",
+      "Cook spam in microwave (1 min)",
+      "Lay nori flat, add rice layer",
+      "Top with spam and crushed Cheetos",
+      "Roll it up tight",
+      "Cut into pieces with a spoon (yes, really)"
+    ]
   },
   {
     id: "2",
@@ -55,7 +65,15 @@ export const MOCK_MEALS: Meal[] = [
     remixes: 15,
     isVerified: true,
     createdAt: new Date("2024-01-14"),
-    description: "Cooked ramen, flattened it, added cheese and ketchup. Microwave until melty."
+    description: "Cooked ramen, flattened it, added cheese and ketchup. Microwave until melty.",
+    steps: [
+      "Cook ramen in microwave (3 min)",
+      "Drain most of the water",
+      "Flatten noodles on a plate into a circle",
+      "Spread ketchup on top like pizza sauce",
+      "Add cheese slices",
+      "Microwave for 1 minute until cheese melts"
+    ]
   },
   {
     id: "3",
@@ -74,7 +92,14 @@ export const MOCK_MEALS: Meal[] = [
     remixes: 3,
     isVerified: false,
     createdAt: new Date("2024-01-13"),
-    description: "Trust the process. Air fryer makes it crispy."
+    description: "Trust the process. Air fryer makes it crispy.",
+    steps: [
+      "Spread peanut butter on tortilla",
+      "Add jelly on one half",
+      "Fold tortilla in half",
+      "Air fry at 380°F for 3 minutes",
+      "Flip halfway through"
+    ]
   },
   {
     id: "4",
@@ -93,7 +118,15 @@ export const MOCK_MEALS: Meal[] = [
     remixes: 6,
     isVerified: false,
     createdAt: new Date("2024-01-12"),
-    description: "Sounds wrong, tastes right. The sweetness balances the soy sauce."
+    description: "Sounds wrong, tastes right. The sweetness balances the soy sauce.",
+    steps: [
+      "Put rice in bowl",
+      "Crack egg on top, mix it up",
+      "Microwave for 2 minutes",
+      "Stir in soy sauce",
+      "Crush Frosted Flakes on top",
+      "Microwave another minute"
+    ]
   },
   {
     id: "5",
@@ -112,6 +145,14 @@ export const MOCK_MEALS: Meal[] = [
     remixes: 22,
     isVerified: true,
     createdAt: new Date("2024-01-11"),
-    description: "Make mac & cheese normally. Press into waffle iron. Crispy heaven."
+    description: "Make mac & cheese normally. Press into waffle iron. Crispy heaven.",
+    steps: [
+      "Make box mac & cheese according to package",
+      "Heat up waffle iron",
+      "Spray waffle iron with cooking spray (or butter it)",
+      "Scoop mac & cheese onto waffle iron",
+      "Close and press for 5-7 minutes until crispy",
+      "Carefully remove and let cool for 1 minute"
+    ]
   }
 ];

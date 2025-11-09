@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Clock, DollarSign, Flame, Shuffle, CheckCircle2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface MealCardProps {
   meal: Meal;
@@ -10,8 +11,13 @@ interface MealCardProps {
 }
 
 export const MealCard = ({ meal, rank }: MealCardProps) => {
+  const navigate = useNavigate();
+
   return (
-    <Card className="overflow-hidden bg-card border-border hover:shadow-neon transition-all duration-300">
+    <Card 
+      className="overflow-hidden bg-card border-border hover:shadow-neon transition-all duration-300 cursor-pointer"
+      onClick={() => navigate(`/meal/${meal.id}`)}
+    >
       {/* Rank Badge */}
       {rank && (
         <div className="absolute top-4 left-4 z-10 bg-gradient-struggle text-primary-foreground font-black text-2xl w-12 h-12 rounded-full flex items-center justify-center shadow-neon">
@@ -103,11 +109,24 @@ export const MealCard = ({ meal, rank }: MealCardProps) => {
 
         {/* Actions */}
         <div className="flex gap-2 pt-2">
-          <Button variant="outline" className="flex-1 border-primary hover:bg-primary hover:text-primary-foreground font-bold">
+          <Button 
+            variant="outline" 
+            className="flex-1 border-primary hover:bg-primary hover:text-primary-foreground font-bold"
+            onClick={(e) => {
+              e.stopPropagation();
+              // Handle verify action
+            }}
+          >
             <CheckCircle2 className="w-4 h-4 mr-2" />
             Verify
           </Button>
-          <Button className="flex-1 bg-gradient-struggle border-0 hover:opacity-90 font-bold">
+          <Button 
+            className="flex-1 bg-gradient-struggle border-0 hover:opacity-90 font-bold"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/remix/${meal.id}`);
+            }}
+          >
             <Shuffle className="w-4 h-4 mr-2" />
             Remix This
           </Button>

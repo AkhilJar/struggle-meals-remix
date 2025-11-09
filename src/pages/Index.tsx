@@ -1,16 +1,21 @@
 import { MealCard } from "@/components/MealCard";
 import { MOCK_MEALS } from "@/types/meal";
 import { Button } from "@/components/ui/button";
+import { Navigation } from "@/components/Navigation";
 import { Plus, Flame, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [sortedMeals] = useState(
     [...MOCK_MEALS].sort((a, b) => b.struggleScore - a.struggleScore)
   );
 
   return (
     <div className="min-h-screen bg-background">
+      <Navigation />
+      
       {/* Hero Header */}
       <header className="bg-gradient-hero border-b-4 border-primary">
         <div className="container mx-auto px-4 py-8">
@@ -23,18 +28,16 @@ const Index = () => {
                 Cheap. Fast. Questionable.
               </p>
             </div>
-            <Button size="lg" className="bg-gradient-struggle border-0 hover:opacity-90 font-black text-lg shadow-neon">
+            <Button 
+              size="lg" 
+              className="bg-gradient-struggle border-0 hover:opacity-90 font-black text-lg shadow-neon"
+              onClick={() => navigate("/remix")}
+            >
               <Plus className="w-5 h-5 mr-2" />
               Post Meal
             </Button>
           </div>
           
-          {/* Tagline */}
-          <div className="bg-card/50 backdrop-blur-sm border-2 border-primary/30 rounded-lg p-4 max-w-2xl">
-            <p className="text-muted-foreground text-center italic">
-              "Where hot sauce and Pop-Tarts become a meal. The internet's only verified microwave mess hall."
-            </p>
-          </div>
         </div>
       </header>
 
@@ -75,6 +78,7 @@ const Index = () => {
             size="lg" 
             variant="outline" 
             className="bg-background hover:bg-background/90 border-2 border-background font-black text-lg"
+            onClick={() => navigate("/remix")}
           >
             <Plus className="w-5 h-5 mr-2" />
             Create Your First Meal
