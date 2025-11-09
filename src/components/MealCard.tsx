@@ -128,16 +128,20 @@ export const MealCard = ({ meal, rank }: MealCardProps) => {
           <Button 
             variant="outline" 
             className="flex-1 border-primary hover:bg-primary hover:text-primary-foreground font-bold"
-            disabled={meal.isVerified || verifyMealMutation.isPending}
+            disabled={verifyMealMutation.isPending}
             onClick={(e) => {
               e.stopPropagation();
+              const nextVerifiedState = !meal.isVerified;
+              const nextVerifications = nextVerifiedState
+                ? meal.verifications + 1
+                : Math.max(0, meal.verifications - 1);
               verifyMealMutation.mutate(
-                { mealId: meal.id, verifications: meal.verifications + 1 },
+                { mealId: meal.id, isVerified: nextVerifiedState, verifications: nextVerifications },
                 {
                   onSuccess: () => {
                     toast({
-                      title: "Certified Struggle unlocked",
-                      description: `${meal.title} is now verified.`,
+                      title: nextVerifiedState ? "Certified Struggle unlocked" : "Removed certification",
+                      description: `${meal.title} ${nextVerifiedState ? "is now verified" : "is no longer verified"}.`,
                     });
                   },
                   onError: () => {
@@ -155,7 +159,7 @@ export const MealCard = ({ meal, rank }: MealCardProps) => {
             ) : (
               <CheckCircle2 className="w-4 h-4 mr-2" />
             )}
-            {meal.isVerified ? "Verified" : "Verify"}
+            {meal.isVerified ? "Unverify" : "Verify"}
           </Button>
           <Button 
             className="flex-1 bg-gradient-struggle border-0 hover:opacity-90 font-bold"

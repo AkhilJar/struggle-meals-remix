@@ -231,10 +231,13 @@ export const updateRemix = async (id: string, payload: NewRemixInput): Promise<R
   return mapRemix(data);
 };
 
-export const verifyMeal = async (mealId: string, verifications?: number): Promise<Meal> => {
+export const verifyMeal = async (
+  mealId: string,
+  options: { isVerified: boolean; verifications?: number },
+): Promise<Meal> => {
   const { data, error } = await supabase
     .from<MealRow>("meals")
-    .update({ is_verified: true, verifications })
+    .update({ is_verified: options.isVerified, verifications: options.verifications })
     .eq("id", mealId)
     .select(mealSelect)
     .single();

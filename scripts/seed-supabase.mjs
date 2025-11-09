@@ -15,13 +15,14 @@ const supabase = createClient(supabaseUrl, serviceKey, {
 });
 
 const now = new Date();
+const struggleImage = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80";
 
 const meals = [
   {
     id: "7f9a4caa-1111-4f9e-a111-111111111111",
     title: "Hot Cheeto Sushi Burrito",
     description: "Crushed Hot Cheetos replace tempura flakes. Microwave-only madness.",
-    image_url: "https://images.unsplash.com/photo-1553621042-f6e147245754?w=800&q=80&auto=format&fit=crop",
+    image_url: struggleImage,
     ingredients: ["Hot Cheetos", "Rice", "Spam", "Nori"],
     tools: ["Microwave", "Spoon"],
     steps: [
@@ -46,7 +47,7 @@ const meals = [
     id: "7f9a4caa-2222-4f9e-a222-222222222222",
     title: "Microwave Ramen Pizza",
     description: "Ramen noodle crust, ketchup sauce, and string cheese—college fine dining.",
-    image_url: "https://images.unsplash.com/photo-1506354666786-959d6d497f1a?w=800&q=80&auto=format&fit=crop",
+    image_url: struggleImage,
     ingredients: ["Instant Ramen", "Ketchup", "String Cheese"],
     tools: ["Microwave", "Plate"],
     steps: [
@@ -71,7 +72,7 @@ const meals = [
     id: "7f9a4caa-3333-4f9e-a333-333333333333",
     title: "PB&J Quesadilla Supreme",
     description: "Peanut butter + jelly folded in a tortilla and fried on any hot surface.",
-    image_url: "https://images.unsplash.com/photo-1508739826987-b79cd8b7da12?w=800&q=80&auto=format&fit=crop",
+    image_url: struggleImage,
     ingredients: ["Flour Tortilla", "Peanut Butter", "Jelly"],
     tools: ["Pan", "Spatula"],
     steps: [
@@ -95,7 +96,7 @@ const meals = [
     id: "7f9a4caa-4444-4f9e-a444-444444444444",
     title: "Cereal Fried Rice",
     description: "Leftover rice fried with sugary cereal for that chaos crunch.",
-    image_url: "https://images.unsplash.com/photo-1473093226795-af9932fe5856?w=800&q=80&auto=format&fit=crop",
+    image_url: struggleImage,
     ingredients: ["Leftover Rice", "Frosted Flakes", "Soy Sauce", "Egg"],
     tools: ["Microwave", "Bowl"],
     steps: [
@@ -119,7 +120,7 @@ const meals = [
     id: "7f9a4caa-5555-4f9e-a555-555555555555",
     title: "Mac & Cheese Waffle Stack",
     description: "Box mac smashed into a waffle iron until crispy golden.",
-    image_url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80&auto=format&fit=crop",
+    image_url: struggleImage,
     ingredients: ["Boxed Mac & Cheese", "Cooking Spray"],
     tools: ["Pot", "Waffle Iron"],
     steps: [
@@ -146,7 +147,7 @@ const remixes = [
     parent_meal_id: meals[0].id,
     title: "Nuclear Crunch Roll",
     description: "Added canned corn + torched mayo for a dorm brûlée.",
-    image_url: "https://images.unsplash.com/photo-1562157873-818bc0726f68?w=800&q=80&auto=format&fit=crop",
+    image_url: struggleImage,
     ingredients: ["Hot Cheetos", "Rice", "Spam", "Corn", "Spicy Mayo"],
     tools: ["Microwave", "Spoon", "Lighter"],
     steps: ["Follow the OG roll", "Mix corn into rice", "Torch mayo on top"],
@@ -162,7 +163,7 @@ const remixes = [
     parent_meal_id: meals[1].id,
     title: "Breakfast Ramen Pizza",
     description: "Threw scrambled egg and crushed chips on the ramen crust.",
-    image_url: "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=800&q=80&auto=format&fit=crop",
+    image_url: struggleImage,
     ingredients: ["Instant Ramen", "Egg", "Tortilla Chips", "Hot Sauce"],
     tools: ["Microwave", "Plate"],
     steps: ["Cook ramen disc", "Scramble egg in microwave cup", "Top pizza with egg + chips + hot sauce"],
@@ -178,7 +179,7 @@ const remixes = [
     parent_meal_id: meals[4].id,
     title: "Sweet Heat Mac Waffle",
     description: "Sriracha + honey drizzle plus crushed peanuts for texture.",
-    image_url: "https://images.unsplash.com/photo-1542827633-3b3c62b4b006?w=800&q=80&auto=format&fit=crop",
+    image_url: struggleImage,
     ingredients: ["Mac & Cheese", "Hot Honey", "Peanuts"],
     tools: ["Waffle Iron"],
     steps: ["Waffle the mac", "Drizzle hot honey", "Finish with crushed peanuts"],

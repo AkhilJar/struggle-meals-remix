@@ -255,15 +255,21 @@ const MealDetail = () => {
           <Button 
             variant="outline" 
             className="flex-1 border-primary hover:bg-primary hover:text-primary-foreground font-bold text-lg h-14"
-            disabled={meal.isVerified || verifyMealMutation.isPending}
-            onClick={() =>
+            disabled={verifyMealMutation.isPending}
+            onClick={() => {
+              const nextVerifiedState = !meal.isVerified;
+              const nextVerifications = nextVerifiedState
+                ? meal.verifications + 1
+                : Math.max(0, meal.verifications - 1);
               verifyMealMutation.mutate(
-                { mealId: meal.id, verifications: meal.verifications + 1 },
+                { mealId: meal.id, isVerified: nextVerifiedState, verifications: nextVerifications },
                 {
                   onSuccess: () => {
                     toast({
-                      title: "Certified Struggle unlocked",
-                      description: `${meal.title} is now verified.`,
+                      title: nextVerifiedState ? "Certified Struggle unlocked" : "Certification removed",
+                      description: nextVerifiedState
+                        ? `${meal.title} is now verified.`
+                        : `${meal.title} reverted to unverified.`,
                     });
                   },
                   onError: () => {
@@ -273,15 +279,15 @@ const MealDetail = () => {
                     });
                   },
                 },
-              )
-            }
+              );
+            }}
           >
             {verifyMealMutation.isPending ? (
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
             ) : (
               <CheckCircle2 className="w-5 h-5 mr-2" />
             )}
-            {meal.isVerified ? "Verified" : "Verify This Meal"}
+            {meal.isVerified ? "Unverify" : "Verify This Meal"}
           </Button>
           <Button 
             className="flex-1 bg-gradient-struggle border-0 hover:opacity-90 font-bold text-lg h-14"

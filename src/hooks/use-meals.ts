@@ -79,10 +79,14 @@ export const useUpdateRemix = () => {
 export const useVerifyMeal = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<Meal, Error, { mealId: string; verifications?: number }, { previousMeals?: Meal[] | undefined; previousMeal?: Meal | null }>({
-    mutationFn: ({ mealId, verifications }: { mealId: string; verifications?: number }) =>
-      verifyMeal(mealId, verifications),
-    onMutate: async ({ mealId, verifications }) => {
+  return useMutation<
+    Meal,
+    Error,
+    { mealId: string; isVerified: boolean; verifications?: number },
+    { previousMeals?: Meal[] | undefined; previousMeal?: Meal | null }
+  >({
+    mutationFn: ({ mealId, isVerified, verifications }) => verifyMeal(mealId, { isVerified, verifications }),
+    onMutate: async ({ mealId, isVerified, verifications }) => {
       await queryClient.cancelQueries({ queryKey: ["meals"] });
       await queryClient.cancelQueries({ queryKey: ["meal", mealId] });
 
@@ -93,8 +97,8 @@ export const useVerifyMeal = () => {
             meal.id === mealId
               ? {
                   ...meal,
-                  isVerified: true,
-                  verifications: verifications ?? meal.verifications + 1,
+                  isVerified,
+                  verifications: verifications ?? meal.verifications,
                 }
               : meal,
           ) ?? [],
@@ -105,8 +109,8 @@ export const useVerifyMeal = () => {
       if (previousMeal) {
         queryClient.setQueryData<Meal>(["meal", mealId], {
           ...previousMeal,
-          isVerified: true,
-          verifications: verifications ?? previousMeal.verifications + 1,
+          isVerified,
+          verifications: verifications ?? previousMeal.verifications,
         });
       }
 

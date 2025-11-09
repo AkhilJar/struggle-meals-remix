@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MealCard } from "@/components/MealCard";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Shuffle, Plus, Trash2, Upload, ChevronLeft, Loader2, Sparkles, Pencil } from "lucide-react";
+import { Shuffle, Plus, Trash2, Upload, ChevronLeft, Loader2, Sparkles, Pencil, Flame } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useCreateRemix, useMeal, useLatestRemixes, useRemix, useUpdateRemix } from "@/hooks/use-meals";
+import { useCreateRemix, useMeal, useMeals, useLatestRemixes, useRemix, useUpdateRemix } from "@/hooks/use-meals";
 import { toast } from "@/components/ui/use-toast";
 import type { NewRemixInput } from "@/types/meal";
 
@@ -36,6 +37,7 @@ const Remix = () => {
   const { data: remixToEdit, isLoading: remixLoading } = useRemix(editingRemixId);
   const parentMealId = editingRemixId ? remixToEdit?.parentMealId ?? undefined : id;
   const { data: originalMeal, isLoading: mealLoading } = useMeal(parentMealId);
+  const { data: meals = [], isLoading: mealsLoading, isError: mealsError, refetch: refetchMeals } = useMeals();
   const { data: latestRemixes = [], isLoading: latestLoading, refetch: refetchLatest } = useLatestRemixes(6);
   const createRemix = useCreateRemix();
   const updateRemix = useUpdateRemix();
@@ -618,6 +620,41 @@ const Remix = () => {
           </form>
         </Card>
         )}
+
+        {/* Latest Meals */}
+        <section className="mt-12">
+          <div className="flex items-center gap-3 mb-4">
+            <Flame className="w-6 h-6 text-primary" />
+            <div>
+              <h2 className="text-2xl font-black text-foreground">Latest Meals</h2>
+              <p className="text-muted-foreground text-sm">
+                Snapshot of the home leaderboard so you can riff instantly.
+              </p>
+            </div>
+          </div>
+          {mealsLoading && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {[...Array(4)].map((_, idx) => (
+                <div key={idx} className="h-80 rounded-xl border-2 border-dashed border-border animate-pulse bg-card/50" />
+              ))}
+            </div>
+          )}
+          {mealsError && (
+            <Card className="p-6 border-destructive text-destructive">
+              <p className="font-bold mb-4">Couldn&apos;t load the feed. Try again?</p>
+              <Button variant="outline" onClick={() => refetchMeals()}>
+                Retry
+              </Button>
+            </Card>
+          )}
+          {!mealsLoading && !mealsError && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {meals.slice(0, 4).map((meal, index) => (
+                <MealCard key={meal.id} meal={meal} rank={index + 1} />
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Latest Remixes */}
         <section className="mt-12">

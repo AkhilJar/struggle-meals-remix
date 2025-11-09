@@ -9,6 +9,12 @@ import { useState } from "react";
 const Challenge = () => {
   const navigate = useNavigate();
   const [ctaLabel] = useState("Make Your Struggle");
+  const submissionHistory: Array<{
+    id: string;
+    title: string;
+    submittedAt: string;
+    status: "pending" | "featured" | "submitted";
+  }> = [];
   const currentChallenge = {
     title: "Crispy, Creamy, and Under $5",
     description: "Create a meal that combines crunchy and creamy textures. Must use at least one dairy product and cost less than $5 total.",
@@ -192,6 +198,52 @@ const Challenge = () => {
             </div>
           </div>
         </Card>
+
+        {/* Submission History */}
+        <section className="mt-12">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-3xl font-black text-foreground">Your Challenge Submissions</h2>
+              <p className="text-muted-foreground">
+                Track what you’ve entered and jump back into Make Your Struggle when inspiration hits.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="font-black"
+              onClick={() => navigate("/remix?challenge=week")}
+            >
+              {ctaLabel}
+            </Button>
+          </div>
+
+          {submissionHistory.length === 0 ? (
+            <Card className="p-6 border-dashed border-2 border-primary/60 text-center">
+              <p className="text-muted-foreground mb-4">
+                You haven’t submitted anything for this challenge yet. Hit the button to log your first entry.
+              </p>
+              <Button className="bg-gradient-struggle border-0 font-black" onClick={() => navigate("/remix?challenge=week")}>
+                Start a Submission
+              </Button>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {submissionHistory.map((submission) => (
+                <Card key={submission.id} className="p-5 flex items-center justify-between">
+                  <div>
+                    <p className="text-xl font-black text-foreground">{submission.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Submitted on {new Date(submission.submittedAt).toLocaleDateString()} · {submission.status}
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={() => navigate(`/remix?edit=${submission.id}`)}>
+                    Edit Entry
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );
