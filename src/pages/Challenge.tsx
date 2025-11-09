@@ -3,8 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Trophy, Sparkles, Clock, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const Challenge = () => {
+  const navigate = useNavigate();
+  const [ctaLabel] = useState("Make Your Struggle");
   const currentChallenge = {
     title: "Crispy, Creamy, and Under $5",
     description: "Create a meal that combines crunchy and creamy textures. Must use at least one dairy product and cost less than $5 total.",
@@ -101,8 +105,9 @@ const Challenge = () => {
           <Button 
             size="lg" 
             className="w-full bg-gradient-struggle border-0 hover:opacity-90 font-black text-xl h-16"
+            onClick={() => navigate("/remix")}
           >
-            Submit Your Entry
+            {ctaLabel}
           </Button>
         </Card>
 

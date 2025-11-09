@@ -1,4 +1,4 @@
-import { Home, Trophy, Shuffle } from "lucide-react";
+import { Home, Trophy, Shuffle, Users } from "lucide-react";
 import { NavLink } from "./NavLink";
 
 export const Navigation = () => {
@@ -12,7 +12,6 @@ export const Navigation = () => {
           >
             Struggle Meals
           </NavLink>
-          
           <div className="flex items-center gap-6">
             <NavLink 
               to="/"
@@ -33,12 +32,21 @@ export const Navigation = () => {
             </NavLink>
             
             <NavLink 
+              to="/dashboard"
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-bold"
+              activeClassName="text-primary"
+            >
+              <Users className="w-5 h-5" />
+              <span className="hidden md:inline">Partners</span>
+            </NavLink>
+            
+            <NavLink 
               to="/remix"
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-bold"
               activeClassName="text-primary"
             >
               <Shuffle className="w-5 h-5" />
-              <span className="hidden md:inline">Remix</span>
+              <span className="hidden md:inline">Make</span>
             </NavLink>
           </div>
         </div>

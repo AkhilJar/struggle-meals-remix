@@ -1,16 +1,15 @@
 import { MealCard } from "@/components/MealCard";
-import { MOCK_MEALS } from "@/types/meal";
 import { Button } from "@/components/ui/button";
 import { Navigation } from "@/components/Navigation";
-import { Plus, Flame, TrendingUp } from "lucide-react";
-import { useState } from "react";
+import { Plus, Flame, TrendingUp, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useMeals } from "@/hooks/use-meals";
+import { useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [sortedMeals] = useState(
-    [...MOCK_MEALS].sort((a, b) => b.struggleScore - a.struggleScore)
-  );
+  const { data: meals = [], isLoading, isError, refetch } = useMeals();
+  const [creationLabel] = useState("Make Your Struggle");
 
   return (
     <div className="min-h-screen bg-background">
@@ -34,7 +33,7 @@ const Index = () => {
               onClick={() => navigate("/remix")}
             >
               <Plus className="w-5 h-5 mr-2" />
-              Post Meal
+              {creationLabel}
             </Button>
           </div>
           
@@ -60,7 +59,31 @@ const Index = () => {
 
         {/* Meals Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {sortedMeals.map((meal, index) => (
+          {isLoading && (
+            <>
+              {[...Array(4)].map((_, idx) => (
+                <div key={idx} className="h-80 rounded-xl border-2 border-dashed border-border animate-pulse bg-card/50" />
+              ))}
+            </>
+          )}
+
+          {isError && (
+            <div className="col-span-full flex flex-col items-center justify-center gap-4 border-2 border-destructive rounded-xl p-8 text-center">
+              <Loader2 className="w-8 h-8 text-destructive animate-spin" />
+              <p className="font-bold text-destructive">Could not load the leaderboard. Check your Supabase table or try again.</p>
+              <Button onClick={() => refetch()} variant="outline" className="font-bold">
+                Retry
+              </Button>
+            </div>
+          )}
+
+          {!isLoading && !isError && meals.length === 0 && (
+            <div className="col-span-full text-center border-2 border-border rounded-xl p-10 text-muted-foreground font-bold">
+              No struggle meals yet. Use the Remix button to seed your Supabase table.
+            </div>
+          )}
+
+          {!isLoading && !isError && meals.map((meal, index) => (
             <MealCard key={meal.id} meal={meal} rank={index + 1} />
           ))}
         </div>
@@ -81,7 +104,7 @@ const Index = () => {
             onClick={() => navigate("/remix")}
           >
             <Plus className="w-5 h-5 mr-2" />
-            Create Your First Meal
+            {creationLabel}
           </Button>
         </div>
       </main>

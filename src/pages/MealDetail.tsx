@@ -1,8 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { MOCK_MEALS } from "@/types/meal";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { 
   Clock, 
   DollarSign, 
@@ -10,13 +10,32 @@ import {
   Shuffle, 
   CheckCircle2, 
   ChevronLeft,
-  Utensils
+  Utensils,
+  Loader2
 } from "lucide-react";
+import { useMeal, useRemixes, useVerifyMeal } from "@/hooks/use-meals";
+import { toast } from "@/components/ui/use-toast";
 
 const MealDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const meal = MOCK_MEALS.find(m => m.id === id);
+  const { data: meal, isLoading } = useMeal(id);
+  const { data: remixes = [], isLoading: remixesLoading } = useRemixes(id);
+  const verifyMealMutation = useVerifyMeal();
+  const fallbackAvatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=StruggleChef";
+  const fallbackImage = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80";
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-20 flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-muted-foreground font-bold">Loading meal details from Supabase...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!meal) {
     return (
@@ -48,9 +67,13 @@ const MealDetail = () => {
         {/* Hero Image */}
         <div className="relative h-96 rounded-xl overflow-hidden mb-8">
           <img 
-            src={meal.image} 
+            src={meal.image ?? fallbackImage} 
             alt={meal.title}
             className="w-full h-full object-cover"
+            onError={(event) => {
+              event.currentTarget.src = fallbackImage;
+              event.currentTarget.onerror = null;
+            }}
           />
           {meal.isVerified && (
             <Badge className="absolute top-4 right-4 bg-struggle-verified border-0 text-foreground font-bold flex items-center gap-1 text-lg px-4 py-2">
@@ -67,14 +90,18 @@ const MealDetail = () => {
           </h1>
           <div className="flex items-center gap-3">
             <img 
-              src={meal.author.avatar} 
+              src={meal.author.avatar ?? fallbackAvatar} 
               alt={meal.author.name}
               className="w-10 h-10 rounded-full"
+              onError={(event) => {
+                event.currentTarget.src = fallbackAvatar;
+                event.currentTarget.onerror = null;
+              }}
             />
             <div>
               <p className="font-bold text-foreground">@{meal.author.name}</p>
               <p className="text-sm text-muted-foreground">
-                {meal.createdAt.toLocaleDateString()}
+                {new Date(meal.createdAt).toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -182,21 +209,86 @@ const MealDetail = () => {
           </div>
         </div>
 
+        {/* Recent remixes */}
+        <div className="mb-10">
+          <div className="flex items-center gap-3 mb-4">
+            <Shuffle className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-black text-foreground">Latest Remixes</h2>
+          </div>
+          {remixesLoading && (
+            <div className="rounded-xl border-2 border-dashed border-border p-6 flex items-center gap-3 text-muted-foreground">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Loading remixes...
+            </div>
+          )}
+          {!remixesLoading && remixes.length === 0 && (
+            <Card className="p-6 text-center text-muted-foreground">
+              No remixes yet. Be the first chaos cook to remix this meal.
+            </Card>
+          )}
+          {!remixesLoading && remixes.length > 0 && (
+            <div className="space-y-4">
+              {remixes.map((remix) => (
+                <Card key={remix.id} className="p-5 border-border">
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div>
+                      <p className="text-xl font-black text-foreground">{remix.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        @{remix.author.name} · {new Date(remix.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Badge className="bg-gradient-struggle border-0 text-primary-foreground">
+                      {remix.ingredients.length} ingredients • {remix.timeInMinutes} min
+                    </Badge>
+                  </div>
+                  {remix.description && (
+                    <p className="mt-3 text-muted-foreground">{remix.description}</p>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Actions */}
         <div className="flex gap-4">
           <Button 
             variant="outline" 
             className="flex-1 border-primary hover:bg-primary hover:text-primary-foreground font-bold text-lg h-14"
+            disabled={meal.isVerified || verifyMealMutation.isPending}
+            onClick={() =>
+              verifyMealMutation.mutate(
+                { mealId: meal.id, verifications: meal.verifications + 1 },
+                {
+                  onSuccess: () => {
+                    toast({
+                      title: "Certified Struggle unlocked",
+                      description: `${meal.title} is now verified.`,
+                    });
+                  },
+                  onError: () => {
+                    toast({
+                      title: "Verification failed",
+                      description: "Could not talk to Supabase. Try again.",
+                    });
+                  },
+                },
+              )
+            }
           >
-            <CheckCircle2 className="w-5 h-5 mr-2" />
-            Verify This Meal
+            {verifyMealMutation.isPending ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 mr-2" />
+            )}
+            {meal.isVerified ? "Verified" : "Verify This Meal"}
           </Button>
           <Button 
             className="flex-1 bg-gradient-struggle border-0 hover:opacity-90 font-bold text-lg h-14"
             onClick={() => navigate(`/remix/${meal.id}`)}
           >
             <Shuffle className="w-5 h-5 mr-2" />
-            Remix This
+            Make Your Struggle
           </Button>
         </div>
       </main>

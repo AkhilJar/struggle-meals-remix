@@ -2,16 +2,24 @@ import { Meal } from "@/types/meal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Clock, DollarSign, Flame, Shuffle, CheckCircle2 } from "lucide-react";
+import { Clock, DollarSign, Flame, Shuffle, CheckCircle2, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useVerifyMeal } from "@/hooks/use-meals";
+import { toast } from "@/components/ui/use-toast";
 
 interface MealCardProps {
   meal: Meal;
   rank?: number;
 }
 
+const fallbackAvatar = "https://api.dicebear.com/7.x/avataaars/svg?seed=StruggleChef";
+const fallbackImage = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80";
+
 export const MealCard = ({ meal, rank }: MealCardProps) => {
   const navigate = useNavigate();
+  const image = meal.image ?? fallbackImage;
+  const avatar = meal.author.avatar ?? fallbackAvatar;
+  const verifyMealMutation = useVerifyMeal();
 
   return (
     <Card 
@@ -28,9 +36,13 @@ export const MealCard = ({ meal, rank }: MealCardProps) => {
       {/* Image */}
       <div className="relative h-64 overflow-hidden">
         <img 
-          src={meal.image} 
+          src={image} 
           alt={meal.title}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+          onError={(event) => {
+            event.currentTarget.src = fallbackImage;
+            event.currentTarget.onerror = null;
+          }}
         />
         {meal.isVerified && (
           <Badge className="absolute top-4 right-4 bg-struggle-verified border-0 text-foreground font-bold flex items-center gap-1">
@@ -50,9 +62,13 @@ export const MealCard = ({ meal, rank }: MealCardProps) => {
         {/* Author */}
         <div className="flex items-center gap-2 text-muted-foreground">
           <img 
-            src={meal.author.avatar} 
+            src={avatar} 
             alt={meal.author.name}
             className="w-6 h-6 rounded-full"
+            onError={(event) => {
+              event.currentTarget.src = fallbackAvatar;
+              event.currentTarget.onerror = null;
+            }}
           />
           <span className="text-sm font-medium">@{meal.author.name}</span>
         </div>
@@ -112,13 +128,34 @@ export const MealCard = ({ meal, rank }: MealCardProps) => {
           <Button 
             variant="outline" 
             className="flex-1 border-primary hover:bg-primary hover:text-primary-foreground font-bold"
+            disabled={meal.isVerified || verifyMealMutation.isPending}
             onClick={(e) => {
               e.stopPropagation();
-              // Handle verify action
+              verifyMealMutation.mutate(
+                { mealId: meal.id, verifications: meal.verifications + 1 },
+                {
+                  onSuccess: () => {
+                    toast({
+                      title: "Certified Struggle unlocked",
+                      description: `${meal.title} is now verified.`,
+                    });
+                  },
+                  onError: () => {
+                    toast({
+                      title: "Verification failed",
+                      description: "Could not update Supabase. Try again.",
+                    });
+                  },
+                },
+              );
             }}
           >
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Verify
+            {verifyMealMutation.isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-4 h-4 mr-2" />
+            )}
+            {meal.isVerified ? "Verified" : "Verify"}
           </Button>
           <Button 
             className="flex-1 bg-gradient-struggle border-0 hover:opacity-90 font-bold"
